@@ -84,37 +84,33 @@ void show(vector<Gifts> &cur)
 
 int gifts(vector<Gifts> &cur, vector<Gifts> &m, int c, int budget, vector<Gifts> &bestSolution, int &bestRemainingBudget)
 {
-    // Precondition
-    assert(budget >= 0 && ssize(m) > 0);
-    /* Postcondition: Result is the number of ways of creating target ‘t‘ with coin
-    collection ‘m.at (c)‘ ... ‘m.at (ssize (m)-1)‘ and these results are printed with
-    ‘cur‘ in front of them. */
+    // Precondition:
+    assert(budget >= 0 && c >= 0);
+    // Postcondition:
 
-
-    if (budget == 0)
+    int currentCost = sum(cur);
+    if (currentCost > budget) 
     {
-        show(cur);
-        return budget;
+        return budget; 
     }
-    else if (budget < 0 || c >= ssize(m))
+    if (c >= ssize(m)) 
     {
         return budget;
     }
-    if (ssize(cur) > ssize(bestSolution) || (ssize(cur) == ssize(bestSolution) && budget > bestRemainingBudget))
+
+    if (currentCost <= budget && currentCost > sum(bestSolution))
     {
         bestSolution = cur;
-        bestRemainingBudget = budget;
+        bestRemainingBudget = budget - currentCost;
     }
 
-    int remainingBudget = budget;
-    for (int i = c; i < ssize(m); i++) 
+    for (int i = c; i < ssize(m); i++)
     {
-        if (m.at(i).price <= remainingBudget) 
+        if (currentCost + m.at(i).price <= budget)
         {
             cur.push_back(m.at(i));
-            int remainingAfterGift = gifts(cur, m, i+1, remainingBudget - m.at(i).price, bestSolution, bestRemainingBudget);
+            gifts(cur, m, i + 1, budget, bestSolution, bestRemainingBudget);
             cur.pop_back();
-            remainingBudget = min(remainingBudget, remainingAfterGift);
         }
     }
     return bestRemainingBudget;
@@ -154,7 +150,7 @@ int main()
         if (!file_store.fail())
             gift.push_back(temporary);
     }
-    show(gift);
+    // show(gift);
 
     Gifts temporary;
 
@@ -175,7 +171,7 @@ int main()
         if (!file_list.fail())
             wlist.push_back(temporary);
     }
-    show(wlist);
+    // show(wlist);
 
     vector<Gifts> currentSelection;
     vector<Gifts> bestSolution;     
