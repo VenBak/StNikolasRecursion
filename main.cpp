@@ -12,106 +12,48 @@ struct Gifts
     string name;
 };
 
-struct Slice
-{
-    int from;   // from >= 0
-    int length; // length >= 0
-};
-
-Slice make_slice(int from, int length)
-{ // Precondition:
-    assert(from >= 0 && length >= 0);
-    /*  post-condition:
-        return slice with given from and length
-    */
-    Slice s = {from, length};
-    return s;
-}
-
-Slice make_slice(const vector<int> &data)
-{ // Precondition:
-    assert(true);
-    /*  Postcondition:
-        returns the slice for the entire vector data.
-    */
-    Slice s = {0, static_cast<int>(ssize(data))};
-    return s;
-}
-
-bool valid_slice(Slice s)
-{ // Precondition:
-    assert(true);
-    /*  Postcondition:
-        returns true only if all selector values of s are not negative.
-    */
-    return 0 <= s.from && 0 <= s.length;
-}
-bool valid_slice(const vector<int> &data, Slice s)
-{ // Precondition:
-    assert(true);
-    /*  Postcondition:
-        returns true only if s is a valid slice for data
-    */
-    return valid_slice(s) && s.from + s.length <= ssize(data);
-}
-
-int first(Slice s)
-{ // Precondition:
-    assert(valid_slice(s));
-    /*  Postcondition:
-        result is index of first element in s (s.from)
-    */
-    return s.from;
-}
-
-int last(Slice s)
-{ // Precondition:
-    assert(valid_slice(s));
-    /*  Postcondition:
-        result is index of last element in s (s.from + s.length - 1)
-    */
-    return s.from + s.length - 1;
-}
-
-int sum(const vector<int> &money)
+int sum(vector<Gifts> &gifts)
 /* Postcondition: return sum of coins in ‘money‘ */
 {
     assert(true);
     int s = 0;
-    int end = ssize(money) - 1;
+    int end = ssize(gifts) - 1;
     int su = 0;
     while (s <= end)
     {
-        su = su + money.at(s);
+        su = su + gifts.at(s).price;
+        s++;
     }
     return su;
 }
 
-int sum(const vector<int> &money, int from)
-/* Postcondition: Return sum of coins in ‘money.at (from)‘ ... ‘money.at (ssize (money)-1)‘ */
-{
-    assert(from < ssize(money));
-    int s = from;
-    int end = ssize(money) - 1;
-    int su = 0;
-    while (s <= end)
-    {
-        su = su + money.at(s);
-    }
-    return su;
-}
+// int sum(const vector<int> &money, int from)
+// /* Postcondition: Return sum of coins in ‘money.at (from)‘ ... ‘money.at (ssize (money)-1)‘ */
+// {
+//     assert(from < ssize(money));
+//     int s = from;
+//     int end = ssize(money) - 1;
+//     int su = 0;
+//     while (s <= end)
+//     {
+//         su = su + money.at(s);
+//         s++;
+//     }
+//     return su;
+// }
 
 int minimum(const vector<int> &money, int from)
 /* Postcondition: Return minimum of ‘money.at (from)‘ ... ‘money.at (ssize (money)-1)‘ */
 {
     assert(from < ssize(money));
-    int s = 1;
+    int s = 0;
     int end = ssize(money) - 1;
     int mn = money.at(0);
     while (s <= end)
     {
         if (mn > money.at(s))
             mn = money.at(s);
+        s++;
     }
     return mn;
 }
@@ -140,66 +82,44 @@ void show(vector<Gifts> &cur)
     cout << endl;
 }
 
-int gifts(vector<int> &cur, const vector<int> &m, int c, int t)
+int gifts(vector<Gifts> &cur, vector<Gifts> &m, int c, int budget, vector<Gifts> &bestSolution, int &bestRemainingBudget)
 {
     // Precondition
-    // assert(valid(m) && 0 <= c && c <= ssize(m) &&
-    //        match_coins(cur, make_slice(cur), m, make_slice(0, c)));
+    assert(budget >= 0 && ssize(m) > 0);
     /* Postcondition: Result is the number of ways of creating target ‘t‘ with coin
     collection ‘m.at (c)‘ ... ‘m.at (ssize (m)-1)‘ and these results are printed with
     ‘cur‘ in front of them. */
 
-    if (t == 0)
+
+    if (budget == 0)
     {
         show(cur);
-        return 1;
+        return budget;
     }
-    else if (t < 0)
+    else if (budget < 0 || c >= ssize(m))
     {
-        return 0;
+        return budget;
     }
-    else if (c >= ssize(m))
+    if (ssize(cur) > ssize(bestSolution) || (ssize(cur) == ssize(bestSolution) && budget > bestRemainingBudget))
     {
-        return 0;
+        bestSolution = cur;
+        bestRemainingBudget = budget;
     }
-    else if (sum(m, c) < t)
+
+    int remainingBudget = budget;
+    for (int i = c; i < ssize(m); i++) 
     {
-        return 0;
+        if (m.at(i).price <= remainingBudget) 
+        {
+            cur.push_back(m.at(i));
+            int remainingAfterGift = gifts(cur, m, i+1, remainingBudget - m.at(i).price, bestSolution, bestRemainingBudget);
+            cur.pop_back();
+            remainingBudget = min(remainingBudget, remainingAfterGift);
+        }
     }
-    else if (minimum(m, c) > t)
-    {
-        return 0;
-    }
-    else
-    {
-        cur.push_back(m.at(c));
-        int with_c = gifts(cur, m, c + 1, t - m.at(c));
-        cur.pop_back();
-        int without_c = gifts(cur, m, c + 1, t);
-        return with_c + without_c;
-    }
+    return bestRemainingBudget;
 }
 
-// bool bin_search (El el, El data [], int low, int up)
-//  {
-//  // Precondition:
-// assert (0 <= low && 0 <= up);
-// // Postcondition:
-// // result is only true iff el is in data[low] .. data[up]
-
-//  if (low > up)
-//  return false;
-// else
-//  {
-//  const int MIDDLE = low + (up - low)/2;
-//  if (el == data[MIDDLE])
-//  return true;
-// else if (el < data[MIDDLE])
-//  return bin_search (el, data, low, MIDDLE - 1);
-//  else
-//  return bin_search (el, data, MIDDLE + 1, up);
-//  }
-// }
 
 #ifndef TESTING
 int main()
@@ -211,7 +131,7 @@ int main()
 
     vector<Gifts> wlist = {};
     vector<Gifts> gift = {};
-    cout << "enter a file name";
+    cout << "Enter a file name: ";
     string file_name;
     cin >> file_name;
     int budget;
@@ -226,7 +146,6 @@ int main()
 
     while (!file_store.fail())
     {
-        int price;
         string name;
         Gifts temporary;
         file_store >> temporary.price;
@@ -258,7 +177,14 @@ int main()
     }
     show(wlist);
 
-    // cout<<gifts(cur,m,0,T)<<" ";
+    vector<Gifts> currentSelection;
+    vector<Gifts> bestSolution;     
+    int bestRemainingBudget = budget;
+
+    cout << "Budget for "+file_name+ " is "  << budget << endl;;
+
+    cout << "Remaining Budget " << gifts(currentSelection, wlist, 0, budget, bestSolution, bestRemainingBudget);
+
 
     return 0;
 }
