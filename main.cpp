@@ -3,6 +3,8 @@
 #include <vector>
 #include <string>
 #include <cassert>
+#include <unordered_set>
+
 
 using namespace std;
 
@@ -104,11 +106,15 @@ int gifts(vector<Gifts> &cur, vector<Gifts> &m, int c, int budget, vector<Gifts>
         bestRemainingBudget = budget - currentCost;
     }
 
+    // Keep track of selected categories to ensure only one gift from each category is included
+    unordered_set<string> selectedCategories;
+
     for (int i = c; i < ssize(m); i++)
     {
-        if (currentCost + m.at(i).price <= budget)
+        if (currentCost + m.at(i).price <= budget && selectedCategories.find(m.at(i).name) == selectedCategories.end())
         {
             cur.push_back(m.at(i));
+            selectedCategories.insert(m.at(i).name);
             gifts(cur, m, i + 1, budget, bestSolution, bestRemainingBudget);
             cur.pop_back();
         }
@@ -161,15 +167,27 @@ int main()
         string line;
 
         getline(file_list, line);
-        Gifts temporary;
-        temporary.name = line;
-        for (int i = 0; i < ssize(gift); i++)
+
+        // Use different index j
+
+        for (int j = 0; j < ssize(gift); j++)
         {
-            if (gift.at(i).name == temporary.name)
-                temporary.price = gift.at(i).price;
+
+            if (gift.at(j).name == line)
+            {
+
+                // Create temporary instance only if current wishlist item exists in giftstore
+
+                temporary.name = line;
+
+                temporary.price = gift.at(j).price;
+
+                // Add as gift to wlist if found in giftstore
+
+                if (!file_list.fail()) wlist.push_back(temporary);
+            }
+
         }
-        if (!file_list.fail())
-            wlist.push_back(temporary);
     }
     // show(wlist);
 
